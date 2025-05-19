@@ -1,58 +1,123 @@
-# Sistema de consulta para Macromedidor portocolo Modbus / prod
-codigo creado en arduino para realizar las consultas de  medidores que usen el protocolo de comunicacion Modbus, este codigo posee lo siguiente 
 
-## Indice
--[archivo de inicio](#archivo-de-inicio)
-    -[Index](#index)
-    -[IncreaseWatchdogTime](#increasewatchdogtime)
-    -[Setup](#setup)
-    -[Config](#config)
-    -[Loop](#loop)
+# ESP32 Macromedidor - Consulta Modbus
 
+Sistema de consulta para medidores que utilizan el protocolo de comunicación **Modbus**, desarrollado para microcontroladores **ESP32** usando el entorno **Arduino**. Este código permite consultar periódicamente medidores a través de interfaces **WiFi** o **Ethernet**, sincronizar la hora vía **NTP**, y realizar la gestión de configuración mediante pantalla y botones integrados.
 
+---
 
+## 📂 Estructura del proyecto
 
+### 1. Archivo de inicio (`index.ino`)
+Contiene la inclusión de las librerías principales:
 
+```cpp
+#include <M5Stack.h>
+#include <esp_task_wdt.h>
+#include <ArduinoJson.h>
+#include <Arduino_JSON.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
+#include <NTPClient.h>
+#include <UniversalTelegramBot.h>
+#include <SSLClient.h>
+#include <SPI.h>
+#include <EthernetLarge.h>
+#include <EthernetUdp.h>
+#include "CronAlarms.h"
+#include "defines.h"
+#include "EEPROM.h"
+#include "trust_anchors.h"
+```
 
+Configura objetos para la conectividad:
+- `WiFiClientSecure` para conexiones por WiFi.
+- `EthernetClient` para conexiones cableadas.
+- Cliente `NTPClient` para sincronización horaria.
 
+---
 
+### 2. `IncreaseWatchdogTime()`
+Función que **incrementa el tiempo del watchdog en 10 segundos**, útil para evitar reinicios durante operaciones largas.
 
-## Archivo de inicio
+---
 
-### Index
-contiene las diferentes librerias a utilizar como lo son:
- <M5Stack.h>,<esp_task_wdt.h>, <ArduinoJson.h>,<HardwareSerial.h>
-<Arduino_JSON.h>, <WiFi.h>, <WiFiUdp.h>, <WiFiClientSecure.h>
-<HTTPClient.h>, <stdlib.h>, <NTPClient.h>, <UniversalTelegramBot.h>
-<SSLClient.h>, <SPI.h>, <EthernetLarge.h>, <EthernetUdp.h>, "CronAlarms.h"
-"defines.h", "EEPROM.h", "trust_anchors.h"
-se configura el objeto WiFiClientSecure para la conectividad por medio del Wifi, y EthernetClient si la 
-conectivida es por medio de cable de red
-se inicializa un cliente NTPClient para sincronizar la fecha y hora del equipo
+### 3. `setup()`
+- Inicializa la pantalla (LCD del M5Stack).
+- Configura velocidad del puerto serie y pines RX/TX.
+- Verifica si hay datos guardados en la **EEPROM** (como número de serie del medidor y red).
+- Si no hay datos, llama a la función `config()` para configuración inicial.
 
-### IncreaseWatchdogTime
-incrementa el tiempo del watchdog en 10 segundos.
+---
 
-### Setup
-inicializa la pantalla, luego establece la velocidad, paridad y pines de RX y TX, verifica si la  
-eeprom tiene datos guardados 
-como el serial del medidor, la direccion, tipo de red si es WIFI o LAN
-si no encuentra datos guardados se redireccioa a la funcion config
+### 4. `config()`
+Gestiona la configuración del sistema:
 
-### Config
-verifica que modo esta activo 1 para WiFi y 0 para LAN, solicitara que se ingrese el serial del medidor 
-y seguido a eso como no encuentra direccion alguna solicitara la direccion del equipo
-de pendidendo del modo escogido inicial mente si es WIFI, solocitara el nombre de la red y su contraseña 
-pero si el LAN este ejecutara una secuensia por defecto y se conectara a la red 
+- Detecta si el modo es **WiFi** (`1`) o **LAN** (`0`).
+- Solicita al usuario:
+  - Número de serie del medidor.
+  - Dirección Modbus.
+  - En modo WiFi: nombre y contraseña de la red.
+  - En modo LAN: realiza una conexión automática (requiere cable Ethernet conectado).
+- Sincroniza la hora del sistema vía NTP.
+- Programa:
+  - **Reinicio automático diario.**
+  - **Consulta periódica cada 10 minutos** al medidor.
 
-Nota: debe estar concetado el cable Ethernet 
+---
 
-una ves finalizada las configuraciones antes mencionadas, sincroniza el relog interno, configura una 
-funcion que reinicia el proceso a una determinada hora del dia y configura una llamada cada 10 minutos 
-en todo el transcurso del dia que son las veces que se realizan las consultas al medidor
+### 5. `loop()`
+- Detecta si se presiona el botón C (reset de EEPROM y reinicio del sistema).
+- Llama a `Cron.delay()` para gestionar tareas temporizadas.
+- Ejecuta la función `ConsultaMedidorModbus()` cada 10 minutos.
 
-### Loop 
-tiene una funcion que se utiliza al presionar el pulsador A esto reinicia la eeprom esto con el fin de 
-realizar un recet de dispositivo, y en la funcion princival esta llamando a Cron.delay que es la que 
-lleva el conteo de los segundos del dia, y llama cada 10 minutos a la funcion ConsultaMedidorModbus 
+---
 
+## 🔁 Funcionalidades principales
+
+- Consulta periódica de medidores Modbus.
+- Detección y configuración automática de red (WiFi o Ethernet).
+- Almacenamiento de parámetros en EEPROM.
+- Sincronización horaria por NTP.
+- Visualización de estado y datos en pantalla.
+- Reinicio programado y botón de restauración.
+
+---
+
+## 📌 Requisitos
+
+- **M5Stack Core** u otro ESP32 compatible.
+- Arduino IDE con bibliotecas:
+  - M5Stack
+  - ArduinoJson
+  - CronAlarms
+  - EthernetLarge
+  - UniversalTelegramBot
+  - NTPClient
+  - SSLClient
+- Conexión a internet (WiFi o cable Ethernet).
+
+---
+
+## 🧠 Uso
+
+1. Conecta el dispositivo por USB.
+2. Carga el código usando Arduino IDE.
+3. En el primer arranque:
+   - Introduce número de serie, dirección del medidor y parámetros de red.
+4. El sistema realizará automáticamente la sincronización horaria y comenzará las consultas Modbus.
+5. Si deseas reiniciar la configuración, presiona el botón A durante la operación.
+
+---
+
+## 📄 Licencia
+
+Este proyecto se distribuye bajo la licencia MIT. Consulta el archivo `LICENSE` para más información.
+
+---
+
+## 🙌 Agradecimientos
+
+Version 1 desarrollada por Anderson camero. 
+Version 2 desarrollada y actualizada por Jefry Povea.
