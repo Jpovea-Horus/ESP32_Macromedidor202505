@@ -1,0 +1,10 @@
+get /Communicator/
+post /Communicator/:serial
+get /Communicator/:serial
+
+//routes
+String path = "/api/v1/meterhistory/plots/";
+String pathCommunicator = "/api/v1/Communicator/";
+String pathRegistered = "/api/v1/meter/";
+String errorPath = "/api/v1/meterhistory/errorMeter/";
+String statusSerialPath = "/api/v1/meter/serial/";

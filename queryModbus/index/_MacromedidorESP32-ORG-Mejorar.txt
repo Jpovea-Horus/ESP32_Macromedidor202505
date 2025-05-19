@@ -1,0 +1,20 @@
+mejoras:
+- comunicacion wifi: ok
+- manejo de errores: ok
+- comunicacion modbus: ok
+- manejo de informacion pantalla: ok
+- estraccion de seriales de equipos: ok
+- Borrador de memoria eeprom y flash: ok
+
+- uso de memoria flash <Preferences.h>: en proceso...
+
+- Sin la auto creacion registros de comunicador:
+    A espera del area de desarrollo, la respuesta de las consultas GET
+    siempre son favorables aunque el serial no esté en la tabla seleccionada
+
+Mejoras alternas:
+    Si no tiene Ethernet o WiFi 
+        continue con proceso de registro de macromedidor
+
+    
+            
